@@ -1,52 +1,212 @@
 # Environment Setup
 
+This document describes the hardware, software environment, and development toolchain used in the project.
+
+The environment information will also be used to document the conditions under which the performance benchmarks are performed.
+
 ## Hardware
-- CPU: Intel(R) Core(TM) i7-7700 CPU @ 3.60GHz
-- RAM: 16GB
+
+- CPU: Intel(R) Core(TM) i7-7700 CPU @ 3.60 GHz
+- RAM: 16 GB
 
 ## Operating System
-Windows 10, version 22H2, Build 19045.6456
+
+- Windows 10
+- Version: 22H2
+- Build: 19045.6456
 
 ## Browser
-- Google Chrome 151.0.7922.172 (64-bit)
-- JS engine: V8 15.1.206.21
 
-## Toolchain verisions
-Checked on: 22.08.2026
+- Google Chrome: 151.0.7922.172 (64-bit)
+- JavaScript engine: V8 15.1.206.21
 
-- rustc 1.97.0 (2d8144b78 2026-07-07)
-- cargo 1.97.0 (c980f4866 2026-06-30)
-- wasm-pack 0.15.0
-- node v20.12.2
-- target: wasm32-unknown-unknown
+> Browser and JavaScript engine versions should be verified again before performing the final benchmark measurements.
 
-## Installation steps
+## Development Toolchain
 
-1. Install Rust via rustup:
-- Download 'rustup-init.exe' from https://rustup.rs and run it
-- When prompted, accept installation of Visual Studio C++ Build Tools (required on Windows even for WASM targets, since some build tooling still compiles for the host)
-- Restart terminal after installation to refresh PATH
+Versions verified on: 26.08.2026
 
-2. Add the WebAssembly compilation target:
+- rustc: 1.97.0 (2d8144b78 2026-07-07)
+- cargo: 1.97.0 (c980f4866 2026-06-30)
+- wasm-pack: 0.15.0
+- Node.js: v20.12.2
+- Rust WebAssembly target: `wasm32-unknown-unknown`
+
+## Environment Installation
+
+### 1. Install Rust
+
+Rust was installed using `rustup`.
+
+On Windows, Visual Studio C++ Build Tools may also be required by parts of the Rust toolchain.
+
+After installation, the Rust installation can be verified with:
+
 ```powershell
-   rustup target add wasm32-unknown-unknown
+rustc --version
+cargo --version
 ```
 
-3. Install wasm-pack (compiles from source, may take a few minutes):
+### 2. Add the WebAssembly Target
+
+The WebAssembly compilation target was added with:
+
 ```powershell
-   cargo install wasm-pack
+rustup target add wasm32-unknown-unknown
 ```
 
-4. Install Node.js:
-- Download LTS version from https://nodejs.org, run installer
-- Restart terminal, verify with 'node --version'
+### 3. Install wasm-pack
 
-5. Install Git (if not already present):
-- Download from https://git-scm.com, run installer with default options
+`wasm-pack` was installed using Cargo:
 
-6. Clone the project repository:
 ```powershell
-   git clone https://github.com/123Mikolaj/fractal-wasm-benchmark.git
+cargo install wasm-pack
 ```
 
-## Notes
+The installation can be verified with:
+
+```powershell
+wasm-pack --version
+```
+
+### 4. Install Node.js
+
+Node.js was installed using the LTS version available from the official Node.js website.
+
+The installation can be verified with:
+
+```powershell
+node --version
+```
+
+### 5. Install Git
+
+Git was installed using the standard Windows installer.
+
+The installation can be verified with:
+
+```powershell
+git --version
+```
+
+### 6. Clone the Repository
+
+The project repository can be cloned with:
+
+```powershell
+git clone https://github.com/123Mikolaj/fractal-wasm-benchmark.git
+cd fractal-wasm-benchmark
+```
+
+## Project Initialization
+
+### JavaScript Implementation
+
+The initial JavaScript implementation is located in the `www` directory:
+
+```text
+www/
+├── index.html
+└── js/
+    ├── main.js
+    ├── mandelbrot.js
+    └── renderer.js
+```
+
+The implementation separates fractal computation from rendering.
+
+- `mandelbrot.js` contains the Mandelbrot computation.
+- `renderer.js` is responsible for rendering the calculated data to an HTML Canvas.
+- `main.js` connects the computation and rendering layers.
+- `index.html` provides the browser entry point and Canvas element.
+
+The JavaScript implementation serves as the reference implementation for the WebAssembly variants.
+
+### Scalar WebAssembly Implementation
+
+The scalar Rust implementation was initialized as a Rust library:
+
+```powershell
+cd rust
+cargo init mandelbrot-scalar --lib
+```
+
+This created the following basic structure:
+
+```text
+rust/
+└── mandelbrot-scalar/
+    ├── Cargo.toml
+    └── src/
+        └── lib.rs
+```
+
+The library is configured in `Cargo.toml` as:
+
+```toml
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+```
+
+`wasm-bindgen` is used to expose Rust functions to JavaScript.
+
+## Local Development Server
+
+The browser application can be served locally from the `www` directory using Python:
+
+```powershell
+cd www
+python -m http.server 8080
+```
+
+The application is then available at:
+
+```text
+http://localhost:8080
+```
+
+A local HTTP server is used instead of opening `index.html` directly because the application uses JavaScript ES modules and will load WebAssembly modules.
+
+## WebAssembly Build Configuration
+
+The scalar Rust implementation is compiled for the browser using:
+
+```powershell
+cd rust/mandelbrot-scalar
+wasm-pack build --target web
+```
+
+The build uses the optimized Rust `release` profile.
+
+During the build process, `wasm-pack` also runs `wasm-opt` to optimize the generated WebAssembly binary.
+
+The generated package is placed in:
+
+```text
+rust/mandelbrot-scalar/pkg/
+```
+
+The package contains the WebAssembly binary and JavaScript bindings generated by `wasm-bindgen`.
+
+## SIMD Configuration
+
+To be documented after the WebAssembly SIMD implementation is introduced.
+
+## Benchmark Environment and Procedure
+
+To be documented before performance measurements are performed.
+
+This section will include:
+
+- benchmarked implementations,
+- compiler and build configuration,
+- tested image resolutions,
+- iteration limits,
+- warm-up procedure,
+- number of benchmark repetitions,
+- measured operations,
+- statistical measures,
+- browser version used for the final measurements.
