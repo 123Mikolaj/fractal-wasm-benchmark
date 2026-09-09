@@ -1,16 +1,23 @@
-import init, { 
-  generate_mandelbrot 
-} from "../wasm/scalar/mandelbrot_scalar.js";
+import init from "../wasm/scalar/mandelbrot_scalar.js";
 
 import initSimd, {
   generate_mandelbrot_simd
 } from "../wasm/simd/mandelbrot_simd.js";
 
-import { generateMandelbrot } from "./mandelbrot.js";
 import { renderMandelbrot } from "./renderer.js";
+import { experimentScenarios } from "./experiment-config.js";
+import { runBenchmarkScenario } from "./experiment-runner.js";
+
+// ----------------------
+// Initialization
+// ----------------------
 
 await init();
 await initSimd();
+
+// ----------------------
+// Default configuration
+// ----------------------
 
 const canvas = document.getElementById("fractalCanvas");
 
@@ -18,104 +25,49 @@ const width = canvas.width;
 const height = canvas.height;
 const maxIterations = 500;
 
-// ---------------
-// Generate results
-// ---------------
+const mandelbrotViewport = {
+  minReal: -2.5,
+  maxReal: 1.0,
+  minImaginary: -1.2,
+  maxImaginary: 1.2
+};
 
-const jsIterations = generateMandelbrot(
-  width,
-  height,
-  maxIterations
-);
+// ----------------------
+// Benchmark scenarios
+// ----------------------
 
-const wasmIterations = generate_mandelbrot(
-  width,
-  height,
-  maxIterations
-);
+console.log("--- BENCHMARK SCENARIOS ---");
 
-const simdIterations = generate_mandelbrot_simd(
-  width,
-  height,
-  maxIterations
-);
+for (const scenario of experimentScenarios) {
+  console.log(
+    "Running scenario:",
+    scenario.id
+  );
 
-// ---------------
-//Validate results
-// ---------------
+  const result = 
+    runBenchmarkScenario(
+      scenario
+    );
 
-console.log("JS length:", jsIterations.length);
-console.log("WASM length:", wasmIterations.length);
-console.log("SIMD length:", simdIterations.length);
-
-let differences = 0;
-
-for(let i = 0; i < jsIterations.length; i++) {
-  if(jsIterations[i] !== wasmIterations[i]) {
-    differences++;
-  }
+  console.log(
+    "Scenario result:",
+    result
+  );
 }
-
-console.log("JS/WASM differences:", differences);
-
-let simdDifferences = 0;
-
-for(let i = 0; i < jsIterations.length; i++) {
-  if(jsIterations[i] !== simdIterations[i]) {
-    simdDifferences++;
-  }
-}
-
-console.log("JS/SIMD differences", simdDifferences);
-
-// ---------------
-// Temporary sanity benchmark
-// ---------------
-
-function measureExecutionTime(name, fn, runs = 10) {
-  const times = [];
-
-  for (let i = 0; i < 3; i++) {
-    fn();
-  }
-
-  for(let i = 0; i < runs; i++) {
-    const start = performance.now();
-
-    fn();
-
-    const end = performance.now();
-    times.push(end - start);
-  }
-
-  const average =
-    times.reduce((sum, time) => sum + time, 0) / times.length;
-
-  console.log(`${name}:`);
-  console.log("Times:", times);
-  console.log("Average:", average.toFixed(3), "ms");
-}
-
-console.log("--- SANITY BENCHMARK ---");
-
-measureExecutionTime(
-  "JavaScript",
-  () => generateMandelbrot(width, height, maxIterations)
-);
-
-measureExecutionTime(
-  "WASM scalar",
-  () => generate_mandelbrot(width, height, maxIterations)
-);
-
-measureExecutionTime(
-  "WASM SIMD",
-  () => generate_mandelbrot_simd(width, height, maxIterations)
-);
 
 // ---------------
 // Render
 // ---------------
+
+const simdIterations = generate_mandelbrot_simd(
+  width,
+  height,
+  maxIterations,
+  mandelbrotViewport.minReal,
+  mandelbrotViewport.maxReal,
+  mandelbrotViewport.minImaginary,
+  mandelbrotViewport.maxImaginary
+);
 
 renderMandelbrot(
   canvas,

@@ -5,6 +5,7 @@
 Implemented the initial Mandelbrot algorithm in JavaScript.
 
 The implementation consists of:
+
 - calculation of the iteration count for a single complex point,
 - generation of iteration values for the complete image,
 - mapping canvas pixels to the complex plane,
@@ -130,3 +131,384 @@ This observation motivated a methodological distinction for the final benchmark 
 2. computational execution time designed to reduce the influence of WebAssembly–JavaScript data transfer.
 
 The final benchmark framework will include additional repetitions, multiple workload configurations, statistical measures, and controlled experimental conditions.
+
+## 31.08.2026 – Julia set implementation
+
+A second fractal workload based on the Julia set was added to the project.
+
+The Julia implementation uses the same quadratic recurrence as the Mandelbrot implementation:
+
+`z(n+1) = z(n)^2 + c`
+
+However, the roles of the pixel coordinates and the complex parameter differ. In the Mandelbrot implementation, each pixel determines `c` and the initial value of `z` is zero. In the Julia implementation, each pixel determines the initial value of `z`, while `c` remains constant for the complete image.
+
+The Julia generator was implemented in all three execution variants:
+
+- JavaScript,
+- scalar WebAssembly,
+- WebAssembly SIMD using `f64x2`.
+
+The initial Julia configuration used:
+
+- Resolution: 800 × 600
+- Number of pixels: 480,000
+- Maximum iterations: 500
+- Real axis range: [-1.8, 1.8]
+- Imaginary axis range: [-1.2, 1.2]
+- Complex parameter: `c = -0.8 + 0.156i`
+
+Selected point tests were performed for the JavaScript and scalar WebAssembly implementations:
+
+| Initial z | Result |
+|---|---:|
+| z = 0 + 0i | 252 |
+| z = 2 + 0i | 1 |
+
+Both implementations produced the same results.
+
+## 31.08.2026 – Julia full-image validation
+
+Full-image correctness validation was performed for the Julia workload.
+
+Validation results:
+
+- JavaScript output length: 480,000
+- Scalar WebAssembly output length: 480,000
+- SIMD WebAssembly output length: 480,000
+- JavaScript vs scalar WebAssembly differences: 0
+- JavaScript vs SIMD WebAssembly differences: 0
+
+All three implementations therefore produced identical iteration counts for every pixel in the tested Julia configuration.
+
+At this stage, both fractal workloads — Mandelbrot and Julia — have validated JavaScript, scalar WebAssembly, and SIMD WebAssembly implementations.
+
+## 31.08.2026 – Benchmark framework
+
+A reusable benchmark module was introduced to replace the initial diagnostic timing code.
+
+The benchmark framework currently provides:
+
+- configurable warm-up executions,
+- configurable measured executions,
+- storage of individual execution times,
+- arithmetic mean,
+- median,
+- minimum execution time,
+- maximum execution time,
+- standard deviation,
+- automated benchmarking of multiple implementations of the same workload.
+
+The current benchmark configuration uses:
+
+- Warm-up executions: 5
+- Measured executions: 30
+
+Warm-up executions are intentionally excluded from the measured sample.
+
+The benchmark measures the execution of the fractal generator only. Canvas rendering is performed separately and is not included in the measured execution time.
+
+The current WebAssembly generators return the complete iteration array to JavaScript. Consequently, these measurements represent practical generator execution time and include the cost associated with making the generated result available to JavaScript.
+
+## 31.08.2026 – Preliminary Mandelbrot benchmark using the new framework
+
+The new benchmark framework was tested using all three Mandelbrot implementations.
+
+Configuration:
+
+- Resolution: 800 × 600
+- Maximum iterations: 500
+- Warm-up executions: 5
+- Measured executions: 30
+
+Observed statistics:
+
+| Implementation | Mean | Median | Min | Max | Standard deviation |
+|---|---:|---:|---:|---:|---:|
+| JavaScript | 153.903 ms | 153.750 ms | 152.000 ms | 155.800 ms | 0.958 ms |
+| Scalar WebAssembly | 210.003 ms | 209.500 ms | 207.800 ms | 215.400 ms | 1.818 ms |
+| SIMD WebAssembly | 140.590 ms | 138.150 ms | 134.500 ms | 162.800 ms | 7.042 ms |
+
+In this run, the SIMD implementation had the lowest mean and median execution times.
+
+The SIMD measurements also showed greater variability than the JavaScript and scalar WebAssembly measurements. Several slower executions increased the mean relative to the median.
+
+These values are preliminary development measurements and are not considered final experimental results. No outlier removal or other post-processing has been applied.
+
+## 31.08.2026 – Preliminary Julia benchmark using the new framework
+
+The same benchmark framework was used with the Julia workload.
+
+Configuration:
+
+- Resolution: 800 × 600
+- Maximum iterations: 500
+- Complex parameter: `c = -0.8 + 0.156i`
+- Warm-up executions: 5
+- Measured executions: 30
+
+Observed statistics:
+
+| Implementation | Mean | Median | Min | Max | Standard deviation |
+|---|---:|---:|---:|---:|---:|
+| JavaScript | 53.580 ms | 53.200 ms | 51.300 ms | 61.300 ms | 1.937 ms |
+| Scalar WebAssembly | 70.663 ms | 70.550 ms | 68.300 ms | 75.600 ms | 1.522 ms |
+| SIMD WebAssembly | 56.030 ms | 55.650 ms | 54.300 ms | 59.500 ms | 1.351 ms |
+
+Unlike the Mandelbrot workload, JavaScript produced the lowest execution time in this Julia configuration. SIMD WebAssembly was close to JavaScript but did not outperform it, while scalar WebAssembly was the slowest implementation.
+
+This difference between the Mandelbrot and Julia results indicates that the relative performance of JavaScript, scalar WebAssembly, and SIMD WebAssembly may depend on workload characteristics rather than on the execution technology alone.
+
+This observation motivates testing multiple workload intensities, Julia parameters, Mandelbrot regions, resolutions, and maximum iteration counts in the final experiment.
+
+No final performance conclusions are drawn from these preliminary measurements.
+
+## 31.08.2026 – Current methodological direction
+
+The preliminary measurements identified several aspects that should be addressed by the final experimental framework.
+
+The planned benchmark methodology will include:
+
+- multiple image resolutions,
+- multiple maximum iteration limits,
+- multiple workload configurations or regions,
+- multiple Julia parameters,
+- repeated measurements with warm-up executions,
+- storage of raw execution times,
+- calculation of descriptive statistics,
+- calculation of relative speedup,
+- automated correctness validation,
+- export of experimental results to CSV and/or JSON.
+
+The experiment should investigate how the relative performance of JavaScript, scalar WebAssembly, and WebAssembly SIMD changes as computational workload increases.
+
+Particular attention will be given to whether SIMD provides greater benefits for more computationally intensive workloads.
+
+A second measurement mode is also planned to distinguish practical generator execution time from computation-focused execution time. The latter should minimize the influence of transferring a complete result array across the WebAssembly–JavaScript boundary, for example by returning a small checksum value instead of the complete iteration buffer.
+
+This distinction may help determine whether WebAssembly computation advantages are partially masked by data-transfer overhead.
+
+The current measurements should therefore be treated exclusively as development checkpoints rather than final thesis results.
+
+## 08.09.2026 – Viewport parameterization and WebAssembly rebuild
+
+The Mandelbrot and Julia generators were refactored so that the complex-plane viewport is supplied explicitly to each implementation instead of being fixed internally.
+
+The generators now receive the viewport boundaries:
+
+- `minReal`,
+- `maxReal`,
+- `minImaginary`,
+- `maxImaginary`.
+
+This change was applied consistently to:
+
+- JavaScript,
+- scalar WebAssembly,
+- WebAssembly SIMD.
+
+The purpose of this refactoring is to allow the final experiment to evaluate different regions of the fractals while keeping the numerical parameters identical between all compared implementations.
+
+The scalar and SIMD Rust modules were rebuilt using `wasm-pack`.
+
+The SIMD module was compiled with the WebAssembly `simd128` target feature enabled.
+
+After rebuilding the modules, full-image correctness validation was repeated for both fractal workloads.
+
+For Mandelbrot:
+
+- Resolution: 800 × 600
+- Maximum iterations: 500
+- Real axis range: [-2.5, 1.0]
+- Imaginary axis range: [-1.2, 1.2]
+- JavaScript vs scalar WebAssembly differences: 0
+- JavaScript vs SIMD WebAssembly differences: 0
+
+For Julia:
+
+- Resolution: 800 × 600
+- Maximum iterations: 500
+- Real axis range: [-1.8, 1.8]
+- Imaginary axis range: [-1.2, 1.2]
+- Complex parameter: `c = -0.8 + 0.156i`
+- JavaScript vs scalar WebAssembly differences: 0
+- JavaScript vs SIMD WebAssembly differences: 0
+
+The viewport refactoring therefore preserved identical output between all three implementations.
+
+## 09.09.2026 – Scenario-based experiment configuration
+
+A dedicated experiment configuration module was introduced.
+
+Benchmark workloads are now represented as explicit scenario objects containing the parameters required to reproduce a particular test.
+
+A Mandelbrot scenario contains:
+
+- unique scenario identifier,
+- fractal type,
+- image width,
+- image height,
+- maximum iteration count,
+- complex-plane viewport.
+
+A Julia scenario additionally contains the constant complex parameter `c`.
+
+The first two scenarios used to test the new architecture are:
+
+- `mandelbrot-full-800x600-500`,
+- `julia-default-800x600-500`.
+
+Both currently use a resolution of 800 × 600 and a maximum iteration count of 500.
+
+The scenario-based structure separates experimental configuration from the benchmark execution logic. It will also allow the final experiment matrix to be expanded systematically with additional resolutions, iteration limits, fractal regions, and Julia parameters.
+
+Scenario validation was added to detect invalid experimental configurations before execution.
+
+The validation currently checks:
+
+- supported fractal type,
+- image width and height,
+- maximum iteration count,
+- presence and numerical validity of viewport boundaries,
+- correct ordering of viewport boundaries,
+- presence and numerical validity of Julia parameters when required.
+
+Image dimensions must be greater than one because pixel coordinates are mapped to the complex plane using `(width - 1)` and `(height - 1)` denominators.
+
+## 09.09.2026 – Scenario-based benchmark runner
+
+A reusable experiment runner was introduced to execute benchmark scenarios.
+
+For each scenario, the runner:
+
+1. validates the scenario configuration,
+2. creates JavaScript, scalar WebAssembly, and SIMD WebAssembly implementations using identical parameters,
+3. performs correctness validation,
+4. executes benchmark warm-up runs,
+5. performs measured runs,
+6. calculates descriptive statistics,
+7. calculates relative speedups,
+8. returns a structured result object.
+
+This reduces duplicated benchmark code and provides a common execution path for both Mandelbrot and Julia workloads.
+
+The benchmark scenario result contains:
+
+- the original scenario configuration,
+- correctness validation results,
+- raw timing measurements and descriptive statistics for each implementation,
+- speedups relative to JavaScript,
+- direct SIMD WebAssembly versus scalar WebAssembly speedup.
+
+## 09.09.2026 – Relative speedup calculations
+
+Relative speedup calculation was added to the benchmark framework.
+
+Speedup is calculated using:
+
+`speedup = baseline execution time / compared execution time`
+
+Therefore:
+
+- a speedup greater than `1.0` means the compared implementation is faster than the baseline,
+- a speedup equal to `1.0` means both have the same execution time,
+- a speedup below `1.0` means the compared implementation is slower than the baseline.
+
+Mean-based and median-based speedups are calculated.
+
+The benchmark results currently include:
+
+- JavaScript versus JavaScript,
+- scalar WebAssembly relative to JavaScript,
+- SIMD WebAssembly relative to JavaScript,
+- SIMD WebAssembly relative to scalar WebAssembly.
+
+The direct SIMD-versus-scalar comparison is particularly relevant for evaluating the effect of explicit WebAssembly SIMD vectorization independently of the JavaScript baseline.
+
+## 09.09.2026 – Sample standard deviation
+
+The standard deviation calculation in the benchmark framework was changed to use the sample standard deviation formula.
+
+For more than one measurement, variance is calculated using the divisor:
+
+`N - 1`
+
+instead of:
+
+`N`.
+
+If only one measurement is available, the standard deviation is reported as zero.
+
+The benchmark therefore treats the collected timing measurements as a sample of possible executions under the tested environment rather than as the complete population of possible execution times.
+
+## 09.09.2026 – Automated per-scenario correctness validation
+
+Correctness validation was moved from temporary manual checks in `main.js` into a reusable validation module.
+
+Before benchmark timing begins, the three implementations configured for the scenario are executed once and their complete output arrays are compared.
+
+JavaScript is currently used as the reference implementation.
+
+The validation performs:
+
+- output length comparison,
+- element-by-element JavaScript versus scalar WebAssembly comparison,
+- element-by-element JavaScript versus SIMD WebAssembly comparison,
+- reporting of the first differing index if a mismatch is detected.
+
+If any difference is found, an error is thrown and the benchmark for that scenario does not proceed.
+
+The validation execution itself is performed before the benchmark and is therefore not included in the measured execution times.
+
+The same implementation functions and scenario parameters are used for validation and benchmarking, reducing the possibility that validation and measurement accidentally use different configurations.
+
+The current automated validation was successfully tested for both existing scenarios.
+
+Mandelbrot scenario:
+
+- Scenario: `mandelbrot-full-800x600-500`
+- Output length: 480,000
+- JavaScript vs scalar WebAssembly differences: 0
+- JavaScript vs SIMD WebAssembly differences: 0
+- Validation status: valid
+
+Julia scenario:
+
+- Scenario: `julia-default-800x600-500`
+- Output length: 480,000
+- JavaScript vs scalar WebAssembly differences: 0
+- JavaScript vs SIMD WebAssembly differences: 0
+- Validation status: valid
+
+The temporary manual correctness-validation code was subsequently removed from `main.js`.
+
+The application entry point now primarily performs WebAssembly initialization, executes the configured benchmark scenarios, and renders a sample Mandelbrot image.
+
+## 09.09.2026 – Current experiment framework status
+
+At the current development checkpoint, the benchmark pipeline can be summarized as:
+
+`scenario configuration → scenario validation → implementation selection → correctness validation → warm-up → measurements → descriptive statistics → speedup calculation → structured result`
+
+Both Mandelbrot and Julia can be executed through the same experiment infrastructure using:
+
+- JavaScript,
+- scalar WebAssembly,
+- WebAssembly SIMD.
+
+Correctness validation is automated for every executed scenario and occurs outside the timed benchmark region.
+
+The current benchmark configuration remains:
+
+- Warm-up executions: 5
+- Measured executions: 30
+
+The current timing mode still measures the complete generator call. For WebAssembly this includes making the generated iteration array available to JavaScript.
+
+The next major development tasks are:
+
+- expand the experiment scenario matrix,
+- add structured export of raw measurements and calculated statistics to JSON and/or CSV,
+- finalize benchmark execution ordering to reduce possible temporal bias,
+- implement a computation-focused measurement mode with reduced WebAssembly–JavaScript result-transfer influence,
+- perform the final controlled benchmark experiment,
+- implement the final user interface and interactive fractal navigation.

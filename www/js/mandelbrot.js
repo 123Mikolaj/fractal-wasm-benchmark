@@ -20,11 +20,15 @@ export function mandelbrotPoint(real, imaginary, maxIterations) {
   return iteration;
 }
 
-export function generateMandelbrot(width, height, maxIterations) {
-  const minReal = -2.5;
-  const maxReal = 1.0;
-  const minImaginary = -1.2;
-  const maxImaginary = 1.2;
+export function generateMandelbrot(
+  width, 
+  height, 
+  maxIterations,
+  minReal,
+  maxReal,
+  minImaginary,
+  maxImaginary
+) {
 
   const result = new Uint32Array(width * height);
 
@@ -32,7 +36,7 @@ export function generateMandelbrot(width, height, maxIterations) {
     for (let x = 0; x < width; x++) {
       const real = minReal + (x / (width - 1)) * (maxReal - minReal);
 
-      const imaginary = minImaginary + (y / (height - 1)) * (maxImaginary - minImaginary)
+      const imaginary = minImaginary + (y / (height - 1)) * (maxImaginary - minImaginary);
 
       const iterations = mandelbrotPoint(
         real,
