@@ -1,3 +1,7 @@
+import {
+  calculateWorkloadMetrics
+} from "./workload-metrics.js";
+
 function compareResults(
   reference,
   compared,
@@ -31,7 +35,8 @@ function compareResults(
 }
 
 export function validateImplementations(
-  implementations
+  implementations,
+  workloadConfig
 ) {
   if (
     !implementations ||
@@ -57,6 +62,20 @@ export function validateImplementations(
       "JavaScript, wasmScalar and wasmSimd implementations are required."
     );
   }
+
+  if (
+    !workloadConfig ||
+    typeof workloadConfig !== "object"
+  ) {
+    throw new Error(
+      "Workload configuration is required."
+    );
+  }
+
+  const {
+    width,
+    maxIterations
+  } = workloadConfig;
 
   const javascriptResult = javascript();
   const wasmScalarResult = wasmScalar();
@@ -94,6 +113,13 @@ export function validateImplementations(
     );
   }
 
+  const workload =
+    calculateWorkloadMetrics(
+      javascriptResult,
+      width,
+      maxIterations
+    );
+
   return {
     outputLength: javascriptResult.length,
 
@@ -104,6 +130,8 @@ export function validateImplementations(
     javascriptVsWasmSimd: {
       differences: simdComparison.differences
     },
+
+    workload,
 
     valid: true
   };

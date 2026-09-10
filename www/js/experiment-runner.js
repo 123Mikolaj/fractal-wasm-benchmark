@@ -239,7 +239,12 @@ export function runBenchmarkScenario(
 
   const validation = 
     validateImplementations(
-      implementations
+      implementations,
+      {
+        width: scenario.width,
+        maxIterations:
+          scenario.maxIterations
+      }
     );
 
   const benchmarkResults = 

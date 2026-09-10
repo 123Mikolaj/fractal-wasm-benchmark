@@ -512,3 +512,51 @@ The next major development tasks are:
 - implement a computation-focused measurement mode with reduced WebAssembly–JavaScript result-transfer influence,
 - perform the final controlled benchmark experiment,
 - implement the final user interface and interactive fractal navigation.
+
+## Workload metrics
+
+Added workload characterization for benchmark scenarios.
+
+New module:
+- `www/js/workload-metrics.js`
+
+Metrics calculated from the validated JavaScript iteration output:
+- total pixel count,
+- total iteration count,
+- average iterations per pixel,
+- population standard deviation of iteration counts,
+- minimum and maximum observed iteration count,
+- escaped pixel count and ratio,
+- iteration-limit-reached count and ratio.
+
+Added SIMD workload metrics based on the actual two-lane `f64x2`
+processing layout used by the Rust SIMD implementation:
+- SIMD pair count,
+- pair loop iterations,
+- useful lane iterations,
+- wasted lane iterations,
+- algorithmic lane iteration utilization,
+- wasted lane iteration ratio.
+
+The SIMD utilization metric is treated as an algorithmic proxy for
+lane-work imbalance, not as a measurement of physical CPU utilization.
+
+Workload metrics are calculated outside the timed benchmark section.
+They reuse the JavaScript result already produced during correctness
+validation, avoiding an additional fractal generation.
+
+Validation test:
+- scenario: `mandelbrot-full-800x600-250`
+- output length: 480000
+- JS vs scalar WASM differences: 0
+- JS vs SIMD WASM differences: 0
+- escaped ratio: 0.8193
+- iteration-limit-reached ratio: 0.1807
+- SIMD iteration utilization: ~0.98479
+- SIMD wasted lane iteration ratio: ~0.01521
+
+Sanity checks passed:
+- escaped ratio + iteration-limit-reached ratio = 1
+- SIMD iteration utilization + wasted lane iteration ratio = 1
+- SIMD useful lane iterations = total pixel iterations for the tested
+  even-width scenario
