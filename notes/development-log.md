@@ -560,3 +560,50 @@ Sanity checks passed:
 - SIMD iteration utilization + wasted lane iteration ratio = 1
 - SIMD useful lane iterations = total pixel iterations for the tested
   even-width scenario
+
+## Interleaved benchmark execution
+
+Changed the benchmark execution strategy to reduce the influence of
+measurement order on comparisons between implementations.
+
+Previously, all measured runs of one implementation were executed before
+moving to the next implementation:
+
+- JavaScript x 30
+- WebAssembly scalar x 30
+- WebAssembly SIMD x 30
+
+The benchmark runner now uses deterministic balanced interleaving.
+
+For three implementations, the execution order rotates between rounds:
+
+1. JavaScript -> WebAssembly scalar -> WebAssembly SIMD
+2. WebAssembly scalar -> WebAssembly SIMD -> JavaScript
+3. WebAssembly SIMD -> JavaScript -> WebAssembly scalar
+
+The rotation is repeated for all measured rounds.
+
+With 30 measured runs, each implementation is therefore measured:
+- 30 times in total,
+- 10 times in the first position,
+- 10 times in the second position,
+- 10 times in the third position.
+
+Warm-up executions use the same rotating ordering scheme.
+
+The approach is deterministic and reproducible while distributing
+position-related effects between implementations.
+
+The public result structure remains unchanged, so the existing statistical
+analysis and speedup calculations continue to work without modification.
+
+Validation test:
+- scenario: `mandelbrot-full-800x600-250`
+- measured runs per implementation: 30
+- JavaScript vs scalar WASM differences: 0
+- JavaScript vs SIMD WASM differences: 0
+- validation result: true
+- SIMD vs scalar speedup in the test run: ~1.50x
+
+The measured performance values from this development run are not treated
+as final thesis results.

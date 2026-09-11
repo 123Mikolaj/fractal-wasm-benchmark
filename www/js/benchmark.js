@@ -120,14 +120,99 @@ export function benchmarkImplementations(
       "Implementations must be provided as an object."
     );
   }
+  
+  if (
+    !Number.isInteger(warmupRuns) ||
+    warmupRuns < 0
+  ) {
+    throw new Error(
+      "warmupRuns must be a non-negative integer."
+    );
+  }
+
+  if (
+    !Number.isInteger(measuredRuns) ||
+    measuredRuns <= 0
+  ) {
+    throw new Error(
+      "measuredRuns must be a positive integer."
+    );
+  }
+
+  const entries = 
+    Object.entries(implementations);
+
+  if (entries.length === 0) {
+    throw new Error(
+      "At least one implementation is required."
+    );
+  }
+
+  for (const [name, fn] of entries) {
+    if (typeof fn !== "function") {
+      throw new Error(
+        `Implementation ${name} must be a function.`
+      );
+    }
+  }
+
   const results = {};
 
-  for (const [name, fn] of Object.entries(implementations)) {
-    results[name] = benchmarkFunction(
-      fn,
-      warmupRuns,
-      measuredRuns
-    );
+  for (const [name] of entries) {
+    results[name] = {
+      times: []
+    };
+  }
+
+  for (let i = 0; i < warmupRuns; i++) {
+    const offset = i % entries.length;
+
+    for (let position = 0; position < entries.length; position++) {
+      const index =
+        (offset + position) %
+        entries.length;
+
+      const [, fn] = entries[index];
+
+      fn();
+    }
+  }
+
+  for (let round = 0; round < measuredRuns; round++) {
+    const offset =
+      round % entries.length;
+
+    for (
+      let position = 0;
+      position < entries.length;
+      position++
+    ) {
+      const index =
+        (offset + position) %
+        entries.length;
+
+      const [name, fn] =
+        entries[index];
+
+      const start =
+        performance.now();
+
+      fn();
+
+      const end =
+        performance.now();
+
+      results[name].times.push(
+        end - start
+      );
+    }
+  }
+
+  for (const result of Object.values(results)) {
+    result.statistics =
+      calculateStatistics(
+        result.times
+      );
   }
 
   return results;
