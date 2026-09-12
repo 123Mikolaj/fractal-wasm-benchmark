@@ -69,3 +69,41 @@ export function generateJulia(
 
   return result;
 }
+
+export function computeJuliaChecksum(
+  width,
+  height,
+  maxIterations,
+  cReal,
+  cImaginary,
+  minReal,
+  maxReal,
+  minImaginary,
+  maxImaginary
+) {
+  let checksum = 0;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const real =
+        minReal +
+        (x / (width - 1)) *
+        (maxReal - minReal);
+
+      const imaginary =
+        minImaginary +
+        (y / (height - 1)) *
+        (maxImaginary - minImaginary);
+
+      checksum += juliaPoint(
+        real,
+        imaginary,
+        cReal,
+        cImaginary,
+        maxIterations
+      );
+    }
+  }
+
+  return checksum;
+}

@@ -51,3 +51,37 @@ export function generateMandelbrot(
 
   return result;
 }
+
+export function computeMandelbrotChecksum(
+  width,
+  height,
+  maxIterations,
+  minReal,
+  maxReal,
+  minImaginary,
+  maxImaginary
+) {
+  let checksum = 0;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const real =
+        minReal +
+        (x / (width - 1)) *
+        (maxReal - minReal);
+
+      const imaginary =
+        minImaginary +
+        (y / (height - 1)) *
+        (maxImaginary - minImaginary);
+
+      checksum += mandelbrotPoint(
+        real,
+        imaginary,
+        maxIterations
+      );
+    }
+  }
+
+  return checksum;
+}

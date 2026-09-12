@@ -1,4 +1,4 @@
-import init from "../wasm/scalar/mandelbrot_scalar.js";
+import init from "../wasm/scalar/mandelbrot_scalar.js"
 
 import initSimd, {
   generate_mandelbrot_simd

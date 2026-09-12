@@ -607,3 +607,29 @@ Validation test:
 
 The measured performance values from this development run are not treated
 as final thesis results.
+
+## Compute-focused checksum implementations
+
+Added compute-focused checksum implementations for both Mandelbrot and Julia in all three tested execution variants:
+
+- JavaScript
+- WebAssembly scalar
+- WebAssembly SIMD
+
+The checksum variants execute the same fractal iteration calculations as the full-output implementations, but instead of materializing a complete per-pixel `Uint32Array` / `Vec<u32>`, they aggregate the iteration counts into a single checksum value.
+
+Correctness was verified independently for representative 800×600 scenarios with `maxIterations = 250`.
+
+Mandelbrot:
+- JavaScript: 23716568
+- WASM scalar: 23716568
+- WASM SIMD: 23716568
+
+Julia (`c = -0.8 + 0.156i`):
+- JavaScript: 12088291
+- WASM scalar: 12088291
+- WASM SIMD: 12088291
+
+All implementations produced identical checksums for both fractals.
+
+The compute-focused benchmark will be treated as a secondary diagnostic benchmark. It does not isolate pure JS↔WASM transfer overhead, because removing the full result array also changes allocation and memory-store behavior. Its purpose is to assess performance when the cost of full result materialization is substantially reduced.
