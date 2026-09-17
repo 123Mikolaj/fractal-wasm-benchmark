@@ -633,3 +633,32 @@ Julia (`c = -0.8 + 0.156i`):
 All implementations produced identical checksums for both fractals.
 
 The compute-focused benchmark will be treated as a secondary diagnostic benchmark. It does not isolate pure JS↔WASM transfer overhead, because removing the full result array also changes allocation and memory-store behavior. Its purpose is to assess performance when the cost of full result materialization is substantially reduced.
+
+## Compute-focused benchmark integration
+
+Integrated the previously validated checksum implementations into the scenario-based benchmark runner.
+
+Each benchmark scenario now contains two measurement modes:
+
+- end-to-end – generates and returns the complete per-pixel result array,
+- compute-focused – performs the same fractal iteration calculations but aggregates the results into a checksum instead of materializing the complete output array.
+
+The compute-focused implementations are automatically validated before benchmarking. The JavaScript, scalar WebAssembly and SIMD WebAssembly checksums must be identical and must also match `workload.totalIterations` calculated independently from the validated full-output result.
+
+Integration tests were completed successfully for both fractals.
+
+Mandelbrot (`mandelbrot-full-800x600-250`):
+- full-output JS vs WASM scalar differences: 0,
+- full-output JS vs WASM SIMD differences: 0,
+- checksum: 23716568 for JS, WASM scalar and WASM SIMD,
+- checksum matched `workload.totalIterations`.
+
+Julia (`julia-default-800x600-250`):
+- full-output JS vs WASM scalar differences: 0,
+- full-output JS vs WASM SIMD differences: 0,
+- checksum: 12088291 for JS, WASM scalar and WASM SIMD,
+- checksum matched `workload.totalIterations`.
+
+The compute-focused benchmark is treated as a secondary diagnostic measurement. It reduces the cost of full result materialization but is not interpreted as an isolated measurement of JS/WASM transfer overhead.
+
+Both end-to-end and compute-focused modes use the existing warmup, repeated-measurement, deterministic interleaving, statistical summary and speedup calculation infrastructure.

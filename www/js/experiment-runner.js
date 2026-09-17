@@ -1,14 +1,25 @@
-import { generateMandelbrot } from "./mandelbrot.js";
-import { generateJulia } from "./julia.js";
+import { 
+  generateMandelbrot,
+  computeMandelbrotChecksum
+} from "./mandelbrot.js";
+
+import { 
+  generateJulia,
+  computeJuliaChecksum
+} from "./julia.js";
 
 import {
   generate_mandelbrot,
-  generate_julia
+  generate_julia,
+  compute_mandelbrot_checksum,
+  compute_julia_checksum
 } from "../wasm/scalar/mandelbrot_scalar.js";
 
 import {
   generate_mandelbrot_simd,
-  generate_julia_simd
+  generate_julia_simd,
+  compute_mandelbrot_checksum_simd,
+  compute_julia_checksum_simd
 } from "../wasm/simd/mandelbrot_simd.js";
 
 import {
@@ -227,6 +238,198 @@ function createImplementations(scenario) {
   );
 }
 
+function createMandelbrotComputeImplementations(scenario) {
+  const {
+    width,
+    height,
+    maxIterations,
+    viewport
+  } = scenario;
+
+  return {
+    javascript: () =>
+      consumeChecksum(
+        computeMandelbrotChecksum(
+          width,
+          height,
+          maxIterations,
+          viewport.minReal,
+          viewport.maxReal,
+          viewport.minImaginary,
+          viewport.maxImaginary
+        )
+      ),
+
+    wasmScalar: () =>
+      consumeChecksum(
+        compute_mandelbrot_checksum(
+          width,
+          height,
+          maxIterations,
+          viewport.minReal,
+          viewport.maxReal,
+          viewport.minImaginary,
+          viewport.maxImaginary
+        )
+      ),
+
+    wasmSimd: () =>
+      consumeChecksum(
+        compute_mandelbrot_checksum_simd(
+          width,
+          height,
+          maxIterations,
+          viewport.minReal,
+          viewport.maxReal,
+          viewport.minImaginary,
+          viewport.maxImaginary
+        )
+      )
+  };
+}
+
+function createJuliaComputeImplementations(scenario) {
+  const {
+    width,
+    height,
+    maxIterations,
+    viewport,
+    parameters
+  } = scenario;
+
+  return {
+    javascript: () =>
+      consumeChecksum(
+        computeJuliaChecksum(
+          width,
+          height,
+          maxIterations,
+          parameters.cReal,
+          parameters.cImaginary,
+          viewport.minReal,
+          viewport.maxReal,
+          viewport.minImaginary,
+          viewport.maxImaginary
+        )
+      ),
+
+    wasmScalar: () =>
+      consumeChecksum(
+        compute_julia_checksum(
+          width,
+          height,
+          maxIterations,
+          parameters.cReal,
+          parameters.cImaginary,
+          viewport.minReal,
+          viewport.maxReal,
+          viewport.minImaginary,
+          viewport.maxImaginary
+        )
+      ),
+
+    wasmSimd: () =>
+      consumeChecksum(
+        compute_julia_checksum_simd(
+          width,
+          height,
+          maxIterations,
+          parameters.cReal,
+          parameters.cImaginary,
+          viewport.minReal,
+          viewport.maxReal,
+          viewport.minImaginary,
+          viewport.maxImaginary
+        )
+      )
+  };
+}
+
+function createComputeImplementations(scenario) {
+  if (scenario.fractal === "mandelbrot") {
+    return createMandelbrotComputeImplementations(scenario);
+  }
+
+  if (scenario.fractal === "julia") {
+    return createJuliaComputeImplementations(scenario);
+  }
+
+  throw new Error(
+    `Unsupported fractal type: ${scenario.fractal}`
+  );
+}
+
+function validateChecksumImplementations(
+  implementations,
+  expectedTotalIterations
+) {
+  const javascript =
+    implementations.javascript();
+
+  const wasmScalar =
+    implementations.wasmScalar();
+
+  const wasmSimd =
+    implementations.wasmSimd();
+
+  if (!Number.isSafeInteger(javascript)) {
+    throw new Error(
+      "JavaScript checksum is not a safe integer"
+    );
+  }
+
+  const javascriptBigInt =
+    BigInt(javascript);
+
+  const expectedBigInt =
+    BigInt(expectedTotalIterations);
+
+  const implementationsEqual =
+    javascriptBigInt === wasmScalar &&
+    wasmScalar === wasmSimd;
+
+  const matchesExpectedWorkload =
+    javascriptBigInt === expectedBigInt &&
+    wasmScalar === expectedBigInt &&
+    wasmSimd === expectedBigInt;
+
+  if (!implementationsEqual) {
+    throw new Error(
+      "Compute-focused checksum mismatch between implementations."
+    );
+  }
+
+  if (!matchesExpectedWorkload) {
+    throw new Error(
+      "Compute-focused checksum does not match workload totalIterations."
+    );
+  }
+
+  return {
+    valid: true,
+    implementationsEqual,
+    matchesExpectedWorkload,
+
+    values: {
+      javascript: javascript.toString(),
+      wasmScalar: wasmScalar.toString(),
+      wasmSimd: wasmSimd.toString(),
+      expected: expectedBigInt.toString()
+    }
+  };
+}
+
+let computeFocusedSink;
+
+function consumeChecksum(value) {
+  computeFocusedSink = value;
+  return value;
+}
+
+export function getComputeFocusedSink() {
+  return computeFocusedSink;
+}
+
 export function runBenchmarkScenario(
   scenario,
   warmupRuns = 5,
@@ -234,12 +437,12 @@ export function runBenchmarkScenario(
 ) {
   validateScenario(scenario);
 
-  const implementations = 
+  const endToEndImplementations =
     createImplementations(scenario);
 
-  const validation = 
+  const validation =
     validateImplementations(
-      implementations,
+      endToEndImplementations,
       {
         width: scenario.width,
         maxIterations:
@@ -247,30 +450,78 @@ export function runBenchmarkScenario(
       }
     );
 
-  const benchmarkResults = 
+  const computeImplementations =
+    createComputeImplementations(scenario);
+
+  const checksumValidation =
+    validateChecksumImplementations(
+      computeImplementations,
+      validation.workload.totalIterations
+    );
+
+  const endToEndResults =
     benchmarkImplementations(
-      implementations,
+      endToEndImplementations,
       warmupRuns,
       measuredRuns
     );
 
-  const speedups =
+  const endToEndSpeedups =
     calculateImplementationSpeedups(
-      benchmarkResults
+      endToEndResults
     );
 
-  const simdVsScalar = 
+  const endToEndSimdVsScalar =
     calculateSimdVsScalarSpeedup(
-      benchmarkResults
+      endToEndResults
+    );
+
+  const computeFocusedResults =
+    benchmarkImplementations(
+      computeImplementations,
+      warmupRuns,
+      measuredRuns
+    );
+
+  const computeFocusedSpeedups =
+    calculateImplementationSpeedups(
+      computeFocusedResults
+    );
+
+  const computeFocusedSimdVsScalar =
+    calculateSimdVsScalarSpeedup(
+      computeFocusedResults
     );
 
   return {
     scenario,
     validation,
-    implementations: benchmarkResults,
-    speedups: {
-      vsJavaScript: speedups,
-      wasmSimdVsScalar: simdVsScalar
+
+    benchmarks: {
+      endToEnd: {
+        implementations:
+          endToEndResults,
+        speedups: {
+          vsJavaScript:
+            endToEndSpeedups,
+          wasmSimdVsScalar:
+            endToEndSimdVsScalar
+        }
+      },
+
+      computeFocused: {
+        checksumValidation,
+
+        implementations:
+          computeFocusedResults,
+
+        speedups: {
+          vsJavaScript:
+            computeFocusedSpeedups,
+          wasmSimdVsScalar:
+            computeFocusedSimdVsScalar
+        }
+      }
     }
   };
 }
