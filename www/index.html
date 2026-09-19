@@ -8,8 +8,85 @@
   </head>
 
   <body>
-    <h1>Fractal WASM Benchmark</h1>
-    <canvas id="fractalCanvas" width="800" height="600"></canvas>
-    <script type="module" src="./js/main.js"></script>
+    <main>
+      <header>
+        <h1>Fractal WASM Benchmark</h1>
+
+        <p>
+          Performance comparison of JavaScript, 
+          WebAssembly and WebAssembly SIMD 
+          using Mandelbrot and Julia fractals.
+        </p>
+      </header>
+
+      <section id="visualizationSection">
+        <h2>Fractal visualization</h2>
+
+        <canvas
+          id="fractalCanvas"
+          width="800"
+          height="600"
+        ></canvas>
+      </section>
+
+      <section id="benchmarkSection">
+        <h2>Benchmark experiment</h2>
+
+        <p>
+          Run the complete predefined benchmark suite 
+          comparing JavaScript, WebAssembly and 
+          WebAssembly SIMD.
+        </p>
+
+        <button
+          id="runBenchmarkButton"
+          type="button"
+        >
+          Run Benchmark
+        </button>
+
+        <button
+          id="exportJsonButton"
+          type="button"
+          disabled
+        >
+          Export JSON
+        </button>
+
+        <button
+          id="exportCsvButton"
+          type="button"
+          disabled
+        >
+          Export CSV
+        </button>
+
+        <div
+          id="benchmarkProgress"
+          hidden
+        >
+          <p id="benchmarkStatus">
+            Ready
+          </p>
+
+          <progress
+            id="benchmarkProgressBar"
+            value="0"
+            max="22"
+          ></progress>
+
+          <p id="benchmarkProgressText">
+            0 / 22
+          </p>
+
+          <p id="benchmarkScenario"></p>
+        </div>
+      </section>
+    </main>
+
+    <script
+      type="module"
+      src="./js/main.js"
+    ></script>
   </body>
 </html>

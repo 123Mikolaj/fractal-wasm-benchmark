@@ -164,3 +164,53 @@ Notes:
 - The source therefore supports the general motivation for interleaving, not
   the claim that our exact rotation algorithm is Google's methodology.
 - Academic sources should be preferred for the main methodological argument.
+
+## Benchmark execution context
+
+### Main-thread execution
+
+The primary benchmark is intentionally executed on the browser main thread.
+
+All three compared implementations:
+
+- JavaScript,
+- scalar WebAssembly,
+- WebAssembly SIMD,
+
+are executed in the same browser execution context.
+
+This keeps the comparison focused on implementation technology and SIMD vectorization rather than introducing an additional architectural variable related to worker communication or multithreading.
+
+Web Workers are therefore outside the primary experimental scope. They may be discussed as a possible future improvement for application responsiveness, but they are not part of the performance comparison itself.
+
+The experiment suite is asynchronous only between scenarios. Individual benchmark scenarios and measured function executions remain synchronous.
+
+Sources to verify/use in thesis:
+
+- WHATWG HTML Standard – Web Workers:
+  https://html.spec.whatwg.org/multipage/workers.html
+- WHATWG HTML Standard – Event loops:
+  https://html.spec.whatwg.org/multipage/webappapis.html#event-loops
+- MDN – Web Workers API:
+  https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API
+
+## Timing API
+
+Benchmark measurements use the browser High Resolution Time API through `performance.now()`.
+
+Sources to verify/use in thesis:
+
+- W3C High Resolution Time:
+  https://www.w3.org/TR/hr-time/
+- MDN – Performance.now():
+  https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
+
+## Result preservation and analysis
+
+The experiment pipeline preserves raw timing observations in JSON rather than storing only aggregated statistics.
+
+Calculated summary statistics and workload characteristics are additionally exported to CSV for convenient analysis.
+
+The JSON output should be treated as the canonical raw experiment record, while CSV is an analysis-oriented representation derived from the same experiment object.
+
+This design allows the final statistical analysis to be reproduced or recalculated from the individual timing observations instead of relying exclusively on precomputed means and medians.

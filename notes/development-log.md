@@ -662,3 +662,74 @@ Julia (`julia-default-800x600-250`):
 The compute-focused benchmark is treated as a secondary diagnostic measurement. It reduces the cost of full result materialization but is not interpreted as an isolated measurement of JS/WASM transfer overhead.
 
 Both end-to-end and compute-focused modes use the existing warmup, repeated-measurement, deterministic interleaving, statistical summary and speedup calculation infrastructure.
+
+## 2026-09-19 – Experiment suite and result export
+
+Extended the benchmarking infrastructure from single-scenario execution to complete experiment-suite execution.
+
+### Experiment suite
+
+Added `www/js/experiment-suite.js`.
+
+The experiment suite:
+
+- executes a predefined collection of benchmark scenarios sequentially,
+- keeps individual scenario measurements synchronous and uninterrupted,
+- yields to the browser only between scenarios,
+- reports progress through an `onProgress` callback,
+- records experiment-level metadata,
+- collects all scenario results into a single structured experiment object.
+
+The benchmark remains executed on the browser main thread. Web Workers are not used in the experimental pipeline because the goal is to compare JavaScript, scalar WebAssembly and WebAssembly SIMD under the same execution context rather than evaluate multithreaded or worker-based architectures.
+
+The asynchronous suite structure is used only to allow the browser to update the user interface between scenarios. It does not move benchmark computation to a background thread.
+
+### Benchmark UI
+
+Updated `www/index.html` and `www/js/main.js` with basic controls for:
+
+- starting the complete benchmark suite,
+- displaying benchmark progress,
+- displaying the currently processed scenario,
+- exporting completed experiment results.
+
+Benchmark execution is no longer started automatically when the application loads.
+
+### Result export
+
+Added `www/js/result-export.js`.
+
+Two result formats are currently supported:
+
+- JSON – canonical experiment output containing experiment metadata, complete scenario definitions, correctness validation, workload metrics, raw timing samples, calculated statistics, checksums and speedups,
+- CSV – analysis-oriented tabular representation containing one row for each scenario × benchmark mode × implementation combination.
+
+The CSV export contains scenario parameters, benchmark statistics, speedups and workload characteristics. Raw timing samples remain available in the JSON output.
+
+For the complete 22-scenario experiment, the CSV contains:
+
+- 22 scenarios,
+- 2 benchmark modes (`endToEnd` and `computeFocused`),
+- 3 implementations (`javascript`, `wasmScalar`, `wasmSimd`),
+
+resulting in 132 data rows.
+
+### Export validation
+
+The export pipeline was tested using both Mandelbrot and Julia scenarios with reduced benchmark settings (`1` warm-up run and `2` measured runs).
+
+The CSV test produced the expected 12 rows:
+
+2 scenarios × 2 benchmark modes × 3 implementations.
+
+Verified:
+
+- Mandelbrot-specific rows leave Julia parameters empty,
+- Julia rows correctly contain `cReal` and `cImaginary`,
+- both benchmark modes are present,
+- all three implementations are present,
+- benchmark statistics and speedups are exported,
+- workload metrics are exported,
+- SIMD pair metrics are exported correctly.
+
+The temporary reduced benchmark configuration was used only for development validation and is not intended for final experimental measurements.
