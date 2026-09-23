@@ -22,6 +22,102 @@
       <section id="visualizationSection">
         <h2>Fractal visualization</h2>
 
+        <div id="renderControls">
+          <label>
+            Fractal
+            <select id="fractalSelect">
+              <option value="mandelbrot">
+                Mandelbrot
+              </option>
+              <option value="julia">
+                Julia
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Implementation
+            <select id="implementationSelect">
+              <option value="javascript">
+                JavaScript
+              </option>
+              <option value="wasmScalar">
+                WebAssembly
+              </option>
+              <option value="wasmSimd" selected>
+                WebAssembly SIMD
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Resolution
+            <select id="resolutionSelect">
+              <option value="800x600" selected>
+                800 x 600
+              </option>
+              <option value="1280x720">
+                1280 x 720
+              </option>
+              <option value="1920x1080">
+                1920 x 1080
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Max iterations
+            <input
+              id="maxIterationsInput"
+              type="number"
+              min="1"
+              step="1"
+              value="500"
+            >
+          </label>
+
+          <div
+            id="juliaControls"
+            hidden
+          >
+            <label>
+              Julia c real
+              <input
+                id="juliaRealInput"
+                type="number"
+                step="0.001"
+                value="-0.8"
+              >
+            </label>
+
+            <label>
+              Julia c imaginary
+              <input
+                id="juliaImaginaryInput"
+                type="number"
+                step="0.001"
+                value="0.156"
+              >
+            </label>
+          </div>
+
+          <button
+            id="renderButton"
+            type="button"
+          >
+            Render
+          </button>
+
+          <button
+            id="resetSettingsButton"
+            type="button"
+          >
+            Reset settings
+          </button>
+          
+          <p id="renderStatus"></p>
+        </div>
+
         <canvas
           id="fractalCanvas"
           width="800"

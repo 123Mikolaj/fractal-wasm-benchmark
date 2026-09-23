@@ -1,4 +1,4 @@
-export function renderMandelbrot(
+export function renderFractal(
   canvas,
   iterations,
   width,
