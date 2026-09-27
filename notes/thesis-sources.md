@@ -214,3 +214,61 @@ Calculated summary statistics and workload characteristics are additionally expo
 The JSON output should be treated as the canonical raw experiment record, while CSV is an analysis-oriented representation derived from the same experiment object.
 
 This design allows the final statistical analysis to be reproduced or recalculated from the individual timing observations instead of relying exclusively on precomputed means and medians.
+
+## Final experiment protocol and reproducibility
+
+The final experimental protocol was frozen before collecting the final thesis
+dataset.
+
+Final configuration:
+
+- 22 benchmark scenarios,
+- 5 warm-up runs,
+- 30 measured runs,
+- JavaScript, scalar WebAssembly and WebAssembly SIMD,
+- deterministic balanced implementation rotation,
+- end-to-end/full-output benchmark,
+- secondary compute-focused checksum benchmark,
+- raw timing observations preserved in JSON,
+- summary statistics and workload metrics exported to CSV.
+
+Important interpretation constraints for the thesis:
+
+- endToEnd excludes Canvas rendering,
+- computeFocused is not a perfectly isolated pure-compute measurement,
+- endToEnd minus computeFocused must not be described as isolated transfer
+  overhead,
+- MIterations/s represents useful algorithm iterations rather than physical
+  processor instructions,
+- SIMD iteration utilization is an algorithmic lane-divergence proxy rather
+  than physical CPU utilization.
+
+### WebAssembly build reproducibility
+
+The final scalar WebAssembly implementation is built using:
+
+- wasm-pack build --target web,
+- release optimized compilation,
+- wasm-opt post-processing.
+
+The final SIMD implementation additionally uses:
+
+- RUSTFLAGS="-C target-feature=+simd128".
+
+Sources to verify/use in thesis:
+
+- Rust Compiler Codegen Options - target-feature:
+  https://doc.rust-lang.org/rustc/codegen-options/index.html#target-feature
+
+- Rust std::arch WebAssembly SIMD documentation:
+  https://doc.rust-lang.org/core/arch/wasm32/index.html
+
+- WebAssembly Core Specification:
+  https://webassembly.github.io/spec/core/
+
+- wasm-pack documentation:
+  https://rustwasm.github.io/docs/wasm-pack/
+
+The exact claims concerning wasm-pack release behavior, wasm-opt processing and
+SIMD compilation should be verified against the versions used by the project
+before being cited in the final thesis.

@@ -163,6 +163,18 @@ function createCsvRows(experiment) {
             implementation.statistics
               .standardDeviation,
 
+          coefficientOfVariation:
+            implementation.statistics
+              .coefficientOfVariation,
+
+          megaPixelsPerSecond:
+            implementation.throughput
+              .megaPixelsPerSecond,
+
+          megaIterationsPerSecond:
+            implementation.throughput
+              .megaIterationsPerSecond,
+
           speedupVsJavaScriptMean:
             speedupVsJavaScript.mean,
           speedupVsJavaScriptMedian:

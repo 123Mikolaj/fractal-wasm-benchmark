@@ -733,3 +733,146 @@ Verified:
 - SIMD pair metrics are exported correctly.
 
 The temporary reduced benchmark configuration was used only for development validation and is not intended for final experimental measurements.
+
+## 2026-09-27 - Final benchmark pipeline validation
+
+The experimental pipeline was completed and validated before final measurements.
+
+### Benchmark metrics
+
+Extended benchmark statistics with:
+
+- sample standard deviation,
+- coefficient of variation (CV),
+- megapixels per second (MPixels/s),
+- million useful fractal iterations per second (MIterations/s).
+
+Throughput values are derived from the mean execution time.
+
+MIterations/s represents useful scalar-equivalent fractal iterations processed
+per second. It must not be interpreted as a count of physical CPU instructions
+or SIMD lane operations.
+
+### Experiment metadata
+
+Extended experiment-level metadata with:
+
+- experiment version,
+- experiment start and completion timestamps,
+- warm-up run count,
+- measured run count,
+- scenario count,
+- scenario IDs,
+- browser user agent,
+- navigator.hardwareConcurrency.
+
+The final test environment reported Chrome 152.0.0.0 and
+hardwareConcurrency = 8.
+
+### Full technical pilot
+
+Executed the complete 22-scenario experiment suite using reduced development
+settings:
+
+- warm-up runs: 1,
+- measured runs: 2,
+- scenarios: 22.
+
+The pilot covered:
+
+- Mandelbrot and Julia,
+- 800x600, 1280x720 and 1920x1080 resolutions,
+- maximum iteration limits of 250, 500 and 1000,
+- additional Mandelbrot interior and boundary workloads,
+- additional Julia parameter presets.
+
+The full suite completed successfully.
+
+Verified for all scenarios:
+
+- JavaScript vs scalar WebAssembly output differences: 0,
+- JavaScript vs WebAssembly SIMD output differences: 0,
+- full-output validation passed,
+- compute-focused checksums were identical between all implementations,
+- compute-focused checksums matched workload.totalIterations,
+- end-to-end measurements were produced,
+- compute-focused measurements were produced,
+- statistical summaries were produced,
+- speedups were produced,
+- throughput metrics were produced,
+- JSON export completed,
+- CSV export completed.
+
+The reduced 1/2 configuration was used only as an end-to-end technical
+validation of the complete experimental pipeline. These measurements will not
+be used as the final thesis dataset.
+
+### Final benchmark configuration
+
+The final experiment configuration is frozen as:
+
+- 22 scenarios,
+- 5 warm-up runs per implementation and benchmark mode,
+- 30 measured runs per implementation and benchmark mode,
+- deterministic balanced implementation rotation,
+- main-thread execution,
+- correctness validation outside the timed measurement region,
+- two benchmark modes: endToEnd and computeFocused,
+- raw timing observations preserved in JSON,
+- summarized analysis data exported to CSV.
+
+The endToEnd benchmark represents complete fractal result generation,
+including creation/materialization of the complete result available to
+JavaScript. Canvas rendering is excluded.
+
+The computeFocused benchmark performs the same fractal calculation while
+reducing full output materialization by aggregating iteration counts into an
+observable checksum. It is a diagnostic compute-focused benchmark and must not
+be treated as a perfectly isolated measurement of pure computation or
+JavaScript/WebAssembly transfer overhead.
+
+The difference between endToEnd and computeFocused timings must therefore not
+be interpreted directly as transfer cost.
+
+SIMD workload utilization metrics describe algorithmic divergence between
+paired lanes. They are not measurements of physical CPU SIMD utilization.
+
+### Final WebAssembly build
+
+Immediately before the final experiment both WebAssembly implementations were
+rebuilt.
+
+Scalar build:
+
+- wasm-pack build --target web,
+- release profile,
+- optimized build,
+- wasm-opt optimization,
+- no SIMD target feature enabled.
+
+SIMD build:
+
+- wasm-pack build --target web,
+- RUSTFLAGS="-C target-feature=+simd128",
+- release profile,
+- optimized build,
+- wasm-opt optimization.
+
+The newly generated JavaScript bindings and .wasm binaries were copied into
+the application's www/wasm directories before the final experiment.
+
+### Project status
+
+The implementation and experimental infrastructure are now considered
+feature-complete for the thesis.
+
+Further code changes should only be made if a correctness or methodological
+problem is discovered. Additional application features are outside the
+remaining thesis scope.
+
+The next stages are:
+
+1. execute and preserve the final benchmark dataset,
+2. validate the final measurements,
+3. perform statistical analysis and visualization,
+4. write the thesis.

@@ -297,6 +297,9 @@ runBenchmarkButton.addEventListener(
         await runExperimentSuite(
           experimentScenarios,
           {
+            warmupRuns: 5,
+            measuredRuns: 30,
+
             onProgress: progress => {
               benchmarkProgressBar.value =
                 progress.completed;

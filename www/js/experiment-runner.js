@@ -25,7 +25,8 @@ import {
 import {
   benchmarkImplementations,
   calculateImplementationSpeedups,
-  calculateSimdVsScalarSpeedup
+  calculateSimdVsScalarSpeedup,
+  calculateThroughput
 } from "./benchmark.js";
 
 import {
@@ -430,6 +431,26 @@ export function getComputeFocusedSink() {
   return computeFocusedSink;
 }
 
+function addThroughputMetrics(
+  results,
+  totalPixels,
+  totalIterations
+) {
+  for (
+    const result
+    of Object.values(results)
+  ) {
+    result.throughput =
+      calculateThroughput(
+        result.statistics,
+        totalPixels,
+        totalIterations
+      );
+  }
+
+  return results;
+}
+
 export function runBenchmarkScenario(
   scenario,
   warmupRuns = 5,
@@ -466,6 +487,12 @@ export function runBenchmarkScenario(
       measuredRuns
     );
 
+  addThroughputMetrics(
+    endToEndResults,
+    validation.workload.totalPixels,
+    validation.workload.totalIterations
+  );
+
   const endToEndSpeedups =
     calculateImplementationSpeedups(
       endToEndResults
@@ -482,6 +509,12 @@ export function runBenchmarkScenario(
       warmupRuns,
       measuredRuns
     );
+
+  addThroughputMetrics(
+    computeFocusedResults,
+    validation.workload.totalPixels,
+    validation.workload.totalIterations
+  );
 
   const computeFocusedSpeedups =
     calculateImplementationSpeedups(

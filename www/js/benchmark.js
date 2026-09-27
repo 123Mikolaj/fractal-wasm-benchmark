@@ -47,12 +47,18 @@ export function calculateStatistics(times) {
     standardDeviation = Math.sqrt(variance);
   }
 
+  const coefficientOfVariation =
+    mean > 0
+      ? (standardDeviation / mean) * 100
+      : 0;
+
   return {
     mean,
     median,
     min,
     max,
-    standardDeviation
+    standardDeviation,
+    coefficientOfVariation
   };
 }
 
@@ -287,5 +293,58 @@ export function calculateSimdVsScalarSpeedup(results) {
       scalar.statistics.median,
       simd.statistics.median
     )
+  };
+}
+
+export function calculateThroughput(
+  statistics,
+  totalPixels,
+  totalIterations
+) {
+  if (
+    !statistics ||
+    typeof statistics !== "object"
+  ) {
+    throw new Error(
+      "Statistics are required."
+    );
+  }
+
+  if (
+    !Number.isFinite(statistics.mean) ||
+    statistics.mean <= 0
+  ) {
+    throw new Error(
+      "Mean execution time must be positive."
+    );
+  }
+
+  if (
+    !Number.isFinite(totalPixels) ||
+    totalPixels <= 0
+  ) {
+    throw new Error(
+      "Total pixels must be positive."
+    );
+  }
+
+  if (
+    !Number.isFinite(totalIterations) ||
+    totalIterations <= 0
+  ) {
+    throw new Error(
+      "Total iterations must be positive."
+    );
+  }
+
+  const seconds =
+    statistics.mean / 1000;
+
+  return {
+    megaPixelsPerSecond:
+      totalPixels / seconds / 1_000_000,
+
+    megaIterationsPerSecond:
+      totalIterations / seconds / 1_000_000
   };
 }

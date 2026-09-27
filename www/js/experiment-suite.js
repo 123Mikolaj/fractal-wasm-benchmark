@@ -29,12 +29,17 @@ function createExperimentMetadata(
   measuredRuns
 ) {
   return {
+    experimentVersion: "1.0",
+
     startedAt: new Date().toISOString(),
 
     benchmarkConfiguration: {
       warmupRuns,
       measuredRuns,
-      scenarioCount: scenarios.length
+      scenarioCount: scenarios.length,
+      scenarioIds: scenarios.map(
+        scenario => scenario.id
+      )
     },
 
     runtimeEnvironment: {
