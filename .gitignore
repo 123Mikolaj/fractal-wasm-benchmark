@@ -25,3 +25,7 @@ www/wasm/scalar/*
 www/wasm/simd/*
 !www/wasm/scalar/.gitkeep
 !www/wasm/simd/.gitkeep
+!www/wasm/scalar/mandelbrot_scalar.js
+!www/wasm/scalar/mandelbrot_scalar_bg.wasm
+!www/wasm/simd/mandelbrot_simd.js
+!www/wasm/simd/mandelbrot_simd_bg.wasm

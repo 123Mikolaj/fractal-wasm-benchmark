@@ -20,18 +20,19 @@ which the final performance measurements are performed.
 
 ## Browser
 
-Final benchmark environment verified on: 27.09.2026
+Final benchmark environment:
 
-- Google Chrome: 152.0.7977.84 (64-bit)
-- JavaScript engine: V8 15.2.124.21
-- Browser user agent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36`
+- Google Chrome: 154.0.8037.93 (64-bit)
+- JavaScript engine: V8 15.4.80.19
+- Browser user agent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36`
 
-The browser user agent exposes the major Chrome version as `152.0.0.0`,
+The browser user agent exposes the major Chrome version as `154.0.0.0`,
 while `chrome://version` reports the complete installed browser version
-`152.0.7977.84`.
+`154.0.8037.93`.
 
-The complete browser and V8 versions were recorded immediately before the
-final benchmark experiment.
+The complete browser and V8 versions were recorded on 04.10.2026 after
+completion of the final benchmark experiment. The experiment metadata
+recorded the browser user agent automatically during the benchmark.
 
 ## Development Toolchain
 
@@ -468,5 +469,18 @@ experimental pipeline.
 
 Measurements from this pilot are not used as the final thesis dataset.
 
-The final thesis measurements use the frozen `5/30` configuration described
-above.
+The final thesis experiment was subsequently completed using the frozen
+`5/30` configuration described above.
+
+The final experiment contained all 22 scenarios. For every scenario:
+
+- JavaScript and scalar WebAssembly full outputs were identical,
+- JavaScript and WebAssembly SIMD full outputs were identical,
+- compute-focused checksums were identical between all implementations,
+- checksums matched the validated workload iteration totals,
+- both benchmark modes completed successfully,
+- 30 measured timing observations were recorded for each implementation and mode.
+
+The final results were preserved in both JSON and CSV formats. The JSON file
+is treated as the canonical experiment record and retains the raw timing
+observations used for subsequent statistical analysis.

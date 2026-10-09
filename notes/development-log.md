@@ -766,7 +766,7 @@ Extended experiment-level metadata with:
 - browser user agent,
 - navigator.hardwareConcurrency.
 
-The final test environment reported Chrome 152.0.0.0 and
+The technical pilot environment reported Chrome 152.0.0.0 and
 hardwareConcurrency = 8.
 
 ### Full technical pilot
@@ -861,18 +861,62 @@ SIMD build:
 The newly generated JavaScript bindings and .wasm binaries were copied into
 the application's www/wasm directories before the final experiment.
 
+### Final thesis experiment
+
+The final thesis experiment was completed using the frozen benchmark
+configuration.
+
+Final configuration:
+
+- scenarios: 22,
+- warm-up runs: 5 per implementation and benchmark mode,
+- measured runs: 30 per implementation and benchmark mode,
+- implementations: JavaScript, scalar WebAssembly and WebAssembly SIMD,
+- benchmark modes: endToEnd and computeFocused,
+- deterministic balanced implementation rotation,
+- main-thread execution,
+- correctness validation outside the timed measurement region.
+
+The experiment completed all 22 scenarios successfully.
+
+For every scenario:
+
+- JavaScript and scalar WebAssembly full outputs were identical,
+- JavaScript and WebAssembly SIMD full outputs were identical,
+- compute-focused checksums were identical between all three implementations,
+- compute-focused checksums matched the validated workload iteration totals,
+- both benchmark modes completed successfully,
+- 30 measured timing observations were recorded for every implementation and
+  benchmark mode.
+
+The final experiment metadata recorded a browser user agent corresponding to
+Chrome 154. The complete browser environment was subsequently verified as:
+
+- Google Chrome: 154.0.8037.93 (64-bit),
+- JavaScript engine: V8 15.4.80.19,
+- operating system: Windows 10 Version 22H2 (Build 19045.6456),
+- navigator.hardwareConcurrency: 8.
+
+The final dataset was exported in JSON and CSV formats. The JSON export is
+treated as the canonical experiment record and preserves the raw timing
+observations. The CSV export contains 132 data rows corresponding to:
+
+`22 scenarios × 2 benchmark modes × 3 implementations`.
+
+The final dataset passed the planned correctness checks and is used as the
+experimental dataset for the thesis.
+
 ### Project status
 
-The implementation and experimental infrastructure are now considered
-feature-complete for the thesis.
+The implementation, validation pipeline and final experimental data collection
+are complete.
 
-Further code changes should only be made if a correctness or methodological
-problem is discovered. Additional application features are outside the
-remaining thesis scope.
+The project is considered feature-complete for the thesis. No further
+implementation changes are planned unless a correctness or methodological
+problem is discovered.
 
-The next stages are:
+The remaining thesis work consists of:
 
-1. execute and preserve the final benchmark dataset,
-2. validate the final measurements,
-3. perform statistical analysis and visualization,
-4. write the thesis.
+1. statistical analysis and visualization of the final results,
+2. interpretation and discussion of the results,
+3. preparation of the thesis text.

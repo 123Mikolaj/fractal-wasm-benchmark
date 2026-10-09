@@ -17,6 +17,7 @@ fractal-wasm-benchmark/
 │   ├── development-log.md
 │   ├── environment-setup.md
 │   ├── project-structure.md
+│   ├── thesis-outline.md
 │   └── thesis-sources.md
 │
 ├── rust/
@@ -96,6 +97,22 @@ Contains information about:
 
 The file is also used as a basis for documenting the experimental
 environment in the thesis.
+
+### `notes/thesis-outline.md`
+
+Working outline for the thesis.
+
+Contains:
+
+- planned thesis structure,
+- research questions and hypotheses,
+- chapter scope,
+- expected source requirements,
+- approximate page allocation,
+- writing plan.
+
+The document is used as a planning aid during thesis preparation. The final
+thesis structure may differ slightly as the text and results are developed.
 
 ### `notes/thesis-sources.md`
 
